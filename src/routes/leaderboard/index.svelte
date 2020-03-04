@@ -1,0 +1,81 @@
+<script context="module">
+    import {getRoles} from '../../tools/auth';
+    export function preload(page, session) {
+            let roles = getRoles();
+            if (!roles.includes("student")) {
+                this.redirect(302, "/");
+            }
+    }
+</script>
+
+<script>
+    import {onMount} from 'svelte';
+    import Table from '../../components/Table.svelte';
+    import config from '../../tools/config';
+    import {customFetch} from '../../tools/auth';
+    
+    const keyNames = {
+        'githubLogin': 'login',
+        'firstName': 'first name',
+        'lastName': 'last name',
+        'xp': 'xp',
+        'audits': 'audits',
+    };
+    const ignoreKeys = ['id'];
+    let students = [];
+
+    onMount(() => {
+        customFetch(`${config.API_URL}/leaderboard`).then(resp => {
+            return resp.json();
+        }).then(result => {
+            const rawData = result.data.event_user;
+            // form students array
+            students = []
+            for (let i = 0; i < rawData.length; i++) {
+                let xp = rawData[i].user.xp.aggregate.sum.amount;
+                if (xp == null) {xp = 0;}
+                const audits = rawData[i].user.audits.aggregate.count;
+                const user = rawData[i].user;
+
+                // manage keys
+                for (var key of Object.keys(user)) {
+
+                    // delete keys that start with "__"
+                    if (key.includes("__")) {
+                        delete user[key];
+                    }
+
+                    // replace names of keys
+                    if (key in keyNames) {
+                        user[keyNames[key]] = user[key];
+                        delete user[key];
+                    }
+                }
+                students.push({
+                    ...user,
+                    xp: xp,
+                    audits: audits,
+                });
+            }
+            students = students;
+        });
+    });
+
+    // isSafe function to define whether student is above
+    // or under safe zone
+    function isSafe(xp) {
+        if (xp > 5000+6125+9200+24500+6125+9200) {
+            return true;
+        }
+        return false;
+    }
+</script>
+
+<Table
+    bind:data={students}
+    ignoreKeys={ignoreKeys}
+    defaultSortKey={'xp'}
+    thresholdMode={true}
+    thresholdKey={'xp'}
+    isSafeFunction={isSafe}
+    urlKey={'id'} />
