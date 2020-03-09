@@ -32,6 +32,7 @@
         customFetch(`${config.API_URL}/user/${userId}`).then(resp => {
             return resp.json();
         }).then(resp => {
+            console.log(resp);
             user = resp.user.data.user[0];
             audits = resp.progress.data.user[0].audits.aggregate.count
             xp = resp.progress.data.user[0].xp.aggregate.sum.amount;
