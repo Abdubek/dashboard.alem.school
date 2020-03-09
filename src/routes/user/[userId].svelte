@@ -16,6 +16,7 @@
 <script>
     import {onMount} from 'svelte';
     import {customFetch} from '../../tools/auth';
+    import {formatDate} from '../../tools/tools';
     import config from '../../tools/config';
     export let userId;
     let user;
@@ -23,9 +24,19 @@
     let audits;
     let projects;
     let attendance;
-    let timeSpent = {};
-    let calendar;
     let image;
+    let examObjects;
+    let examRecords;
+
+    // object, key - date, value - amount of minutes in building
+    let timeSpent = {};
+    
+    // calendar table
+    let calendar;
+    
+    // object, key - eventID, value - exam data and user records 
+    let exams = {};
+
     let inBuilding = false;
     onMount(() => {
         // Start calendar
@@ -33,15 +44,39 @@
         customFetch(`${config.API_URL}/user/${userId}`).then(resp => {
             return resp.json();
         }).then(resp => {
-            console.log(resp);
             user = resp.user.data.user[0];
             audits = resp.progress.data.user[0].audits.aggregate.count
             xp = resp.progress.data.user[0].xp.aggregate.sum.amount;
             projects = resp.progress.data.user[0].progresses;
             attendance = resp.attendance.data;
             image = resp.image.data[0].face;
-            console.log(image);
+            examObjects = resp.exams.data.object;
+            examRecords = resp.examRecords.data;
 
+            // exam
+            for (let i = 0; i < examObjects.length; i++) {
+                const obj = examObjects[i];
+                if (obj.events.length < 1) {
+                    continue;
+                }
+                const eventID = obj.events[0].id;
+                const objectID = obj.id;
+                const createdAt = obj.events[0].createdAt;
+                const endAt = obj.events[0].endAt;
+                exams[eventID] = {
+                    eventID: eventID,
+                   objectID: objectID,
+                   createdAt: createdAt,
+                   endAt: endAt,
+                   transactions: []
+                }
+            }
+            for (let key in examRecords) {
+                const eventID = key.split("_")[1];
+                exams[eventID].transactions = examRecords[key];
+            }
+
+            // calendar
             // fill timeSpent object where key is date and value is number of hours spent
             let checkin = null;
             let checkinDate = null;
@@ -107,7 +142,6 @@
             }
             calendar = new Cal("divCal");			
             calendar.showcurr();
-            console.log(timeSpent);
         }).catch(err => {
             console.log(`Error: ${err}`);
         });
@@ -128,6 +162,15 @@
                                     dt1.getFullYear(),
                                     dt1.getMonth(),
                                     dt1.getDate()) ) /(1000 * 60 * 60 * 24)));
+    }
+
+    function showTip(minutes) {
+        if (minutes == null) {
+            return ''
+        }
+        const hours = parseInt(minutes / 60);
+        const min = minutes % 60;
+        return `<span class="tooltiptext">${hours}h${min}m</span>`
     }
 
     var Cal = function(divId) {
@@ -212,7 +255,7 @@
             const dateStr = `${y}-${(m+1).toString().padStart(2, "0")}-${i.toString().padStart(2, "0")}`;
             var opacity = 0;
             if (dateStr in timeSpent) {
-                opacity = timeSpent[dateStr] / (24*60);
+                opacity = timeSpent[dateStr] / (24*60)+0.1;
             }
             // If Sunday, start new row
             if ( dow == 0 ) {
@@ -233,18 +276,18 @@
                     const dateStr = `${year}-${(month+1).toString().padStart(2, "0")}-${k.toString().padStart(2, "0")}`;
                     var opacity = 0;
                     if (dateStr in timeSpent) {
-                        opacity = timeSpent[dateStr] / (24*60);
+                        opacity = timeSpent[dateStr] / (24*60)+0.1;
                     }
-                    html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="not-current">` + k + '</td>';
+                    html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="not-current tooltip">${k}${showTip(timeSpent[dateStr])}</td>`;
                     k++;
                 }
             }
             // Write the current day in the loop
             
             if (chkY == this.currYear && chkM == this.currMonth && i == this.currDay) {
-                html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="today">` + i + '</td>';
+                html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="today tooltip">${i}${showTip(timeSpent[dateStr])}</td>`;
             } else {
-                html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="normal">` + i + '</td>';
+                html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="normal tooltip">${i}${showTip(timeSpent[dateStr])}</td>`;
             }
             // If Saturday, closes the row
             if ( dow == 6 ) {
@@ -264,9 +307,9 @@
                     const dateStr = `${year}-${(month+1).toString().padStart(2, "0")}-${k.toString().padStart(2, "0")}`;
                     var opacity = 0;
                     if (dateStr in timeSpent) {
-                        opacity = timeSpent[dateStr] / (24*60);
+                        opacity = timeSpent[dateStr] / (24*60)+0.1;
                     }
-                    html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="not-current">` + k + '</td>';
+                    html += `<td style="background-color: rgba(0, 0, 255, ${opacity});" class="not-current tooltip">${k}${showTip(timeSpent[dateStr])}</td>`;
                     k++;
                 }
             }
@@ -288,6 +331,7 @@
 <p>{user.tel}</p>
 <p>{xp}xp, {audits} audits</p>
 
+<h2>Projects</h2>
 <ul>
     {#each projects as project (project.object.name)}
     <li>{project.object.name}</li>
@@ -295,17 +339,30 @@
 </ul>
 {/if}
 
+<h2>Attendance</h2>
 <div class="calendar-wrapper">
     <button id="btnPrev" type="button" on:click="{() => {calendar.previousMonth()}}">Prev</button>
     <button id="btnNext" type="button" on:click="{() => {calendar.nextMonth()}}">Next</button>
   <div id="divCal"></div>
 </div>
 
-<style>
+{#if user}
+<h2>Exams</h2>
+{#each Object.keys(exams) as eventID (eventID)}
+    <h3>Exam {formatDate(new Date(exams[eventID].createdAt))}</h3>
+    {#each exams[eventID].transactions as transaction, index}
+        <p>level {index+1}, {transaction.amount}xp</p>
+    {:else}
+        <p>Not taken.</p>
+    {/each}
+{/each}
+{/if}
 
+
+<style>
 .calendar-wrapper {
   width: 300px;
-  margin: 3em auto;
+  margin: 0em auto;
 }
 :global(table) {
   clear: both;
@@ -362,6 +419,40 @@
 #btnNext:hover {
   color: #28283b;
   font-weight: bold;
+}
+
+/* Tooltip container */
+:global(.tooltip) {
+  position: relative;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+:global(.tooltip .tooltiptext) {
+  visibility: hidden;
+  width: 60px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  bottom: 100%;
+  left: 0%;
+  margin-left: -10px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+:global(.tooltip:hover .tooltiptext) {
+  visibility: visible;
+}
+
+:global(.tooltiptext:hover) {
+  visibility: hidden;
 }
 
 </style>

@@ -41,7 +41,6 @@ export function customFetch(url, data={}) {
         ...data,
         headers: {'Authorization':jwtToken}
     }).then(resp => {
-        console.log(resp);
         if (resp.status == 401) {
             // try to refresh token
             // otherwise make logout and redirect to /logout
