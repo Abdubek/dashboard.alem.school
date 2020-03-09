@@ -25,6 +25,7 @@
     let attendance;
     let timeSpent = {};
     let calendar;
+    let image;
     let inBuilding = false;
     onMount(() => {
         // Start calendar
@@ -37,6 +38,8 @@
             xp = resp.progress.data.user[0].xp.aggregate.sum.amount;
             projects = resp.progress.data.user[0].progresses;
             attendance = resp.attendance.data;
+            image = resp.image.data[0].face;
+            console.log(image);
 
             // fill timeSpent object where key is date and value is number of hours spent
             let checkin = null;
@@ -278,6 +281,7 @@
 </script>
 
 {#if user}
+<img src="data:image/png;base64, {image}" height=300 alt="{user.githubLogin}" />
 <h1>{user.githubLogin}, {presence}</h1>
 <p>{user.firstName} {user.lastName}</p>
 <p>{user.tel}</p>
