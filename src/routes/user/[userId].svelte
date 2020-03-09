@@ -105,11 +105,11 @@
                         // if difference between checkin and checkout is > than 1 day
                         if (days > 0) {
                             // get next day after checkin with 00:00:00
-                            const tomorrow = new Date(checkinDate);
+                            const tomorrow = new Date(`${checkinDate.split("T")[0]}T00:00:00`);
                             tomorrow.setDate(tomorrow.getDate() + 1);
 
                             // get current day of checkout with 00:00:00
-                            const current = new Date(attendance[i].date);
+                            const current = new Date(`${attendance[i].date}T00:00:00`);
 
                             if (!(checkinDate in timeSpent)) {
                                 timeSpent[checkinDate] = 0;
