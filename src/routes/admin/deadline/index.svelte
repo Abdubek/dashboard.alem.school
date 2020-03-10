@@ -11,26 +11,42 @@
 <table>
   <tr>
     <th>№</th>
-    <th>githubLogin</th>
-    <th>name</th>
-    <th>surname</th>
-    <th>email</th>
-    <th>tel</th>
-    <th>projects</th>
+    <th>personal</th>
+    <th>mandatories</th>
+    <th>optionals</th>
+    <th>exam</th>
   </tr>
-  {#each students as student, index (student.user.id)}
+  {#each students as student, index (student.id)}
     <tr>
         <td>{index+1}</td>
-        <td>{student.user.githubLogin}</td>
-        <td>{student.user.firstName}</td>
-        <td>{student.user.lastName}</td>
-        <td>{student.user.email}</td>
-        <td>{student.user.tel}</td>
         <td>
-        {#each student.unfinished as project}
+            {student.githubLogin}<br>
+            {student.firstName} {student.lastName}<br>
+            {student.email}<br>
+            {student.tel}
+        </td>
+        <td>
+        {#each student.deadline.mandatories as project}
             {project}<br>
         {/each}
         </td>
+        <td>
+        {#if student.deadline.optionals.amount > 0}
+        Left: {student.deadline.optionals.amount}<br>
+        {/if}
+
+        {#each Object.keys(student.deadline.optionals.special) as optional}
+            {#if student.deadline.optionals.special[optional] > 0}
+            {optional}: {student.deadline.optionals.special[optional]}<br>
+            {/if}
+        {/each}
+        </td>
+
+        <td>
+            {student.deadline.exams}
+        </td>
+        
+
     </tr>
   {:else}
   <tr>
@@ -99,6 +115,7 @@
     });
 
     async function getStudents(event) {
+        console.log(checkedObjects);
         if (checkedObjects.length == 0) {
             return;
         }
@@ -114,7 +131,6 @@
             body: JSON.stringify(postBody),
         });
         resp = await resp.json();
-        console.log(resp);
         // iterate over users
         const usersList = resp.data.users;
         for (let i = 0; i < usersList.length; i++) {
@@ -123,8 +139,13 @@
             users[user.id].finished = {};
             users[user.id].deadline = {
                 mandatories: [],
-                optionals: rules.optionals,
-                exams: rules.exams
+                optionals: {
+                    special: {
+                        ...rules.optionals.special
+                    },
+                    amount: rules.optionals.amount
+                },
+                exams: rules.exams.amount
             };
         }
         // iterate over projects
@@ -134,7 +155,6 @@
             for (let i = 0; i < resp.data[key].length; i++) {
                 const userID = resp.data[key][i].user.id;
                 const projectType = resp.data[key][i].object.attrs;
-                console.log(userID);
                 users[userID].finished[key] = projectType;
             }
         }
@@ -142,7 +162,7 @@
         // deadliners
         let deadliners = [];
         for (let userID in users) {
-            // check for mandatories
+            // mandatories
             for (let i = 0; i < rules.mandatories.length; i++) {
                 let project = rules.mandatories[i];
                 if (!(project.name in users[userID].finished)) {
@@ -166,33 +186,35 @@
             if (users[userID].deadline.optionals.amount < 0) {
                 users[userID].deadline.optionals.amount = 0;
             }
-        }
 
-        // let users = data.users;
-        // for (let i = 0; i < users.length; i++) {
-        //     for (var key in data) {
-        //         if (key === 'users') {
-        //             continue;
-        //         }
-        //         let found = false;
-        //         for (let j = 0; j < data[key].length; j++) {
-        //             if (users[i].user.id == data[key][j].user.id) {
-        //                 found = true;
-        //                 break;
-        //             }
-        //         }
-        //         if (!found) {
-        //             if (users[i].unfinished == null) {
-        //                 users[i].unfinished = [];
-        //             }
-        //             users[i].unfinished.push(key);
-        //         }
-        //     }
-        // }
-        // users = users.filter(elem => {
-        //     return (elem.unfinished != null);
-        // });
-        // students = users;
+            // exam
+            for (let key in users[userID]) {
+                if (!(key.startsWith('exam'))) {continue;}
+                const examLevel = users[userID][key].aggregate.count;
+                if (examLevel >= rules.exams.minimum && users[userID].deadline.exams > 0) {
+                    users[userID].deadline.exams--;
+                }
+            }
+
+            let added = false;
+            // push to deadliners
+            if (users[userID].deadline.mandatories.length > 0 ||
+                users[userID].deadline.exams > 0 ||
+                users[userID].deadline.optionals.amount > 0) {
+                deadliners.push(users[userID]);
+                added = true;
+            }
+            // push to deadliners if one of specials not finished
+            if (!added) {
+                for (let optional in users[userID].deadline.optionals.special) {
+                   if (users[userID].deadline.optionals.special[optional] > 0) {
+                        deadliners.push(users[userID]);
+                    }
+                }
+            }
+        }
+        console.log(deadliners);
+        students = deadliners;
     }
 </script>
 
