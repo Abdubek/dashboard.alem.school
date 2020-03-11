@@ -92,7 +92,7 @@
             amount: 3
         },
         exams: {
-            minimum: 7,
+            minimum: 5,
             amount: 2
         }
     };
