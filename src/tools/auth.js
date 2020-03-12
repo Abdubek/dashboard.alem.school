@@ -28,6 +28,21 @@ export function getRoles() {
     return roles;
 }
 
+// getRoles returns roles in from jwt object
+export function isAuthorized() {
+    if (process.browser) {
+        let jwt = localStorage.getItem('jwt_token');
+        if (jwt) {
+            let result = parseJwt(jwt);
+            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+            if (auth != null) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // customFetch is main function to call fetch to api.alem.school
 // if api returns 401 (Unauthorized) then it tries to refresh token
 // if refresh is impossible (invalid token) then commits logout

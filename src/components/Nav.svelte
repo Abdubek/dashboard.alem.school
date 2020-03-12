@@ -2,7 +2,7 @@
 <script>
 	export let segment;
 
-	import {getRoles} from '../tools/auth';
+	import {getRoles, isAuthorized} from '../tools/auth';
 
 	let roles = [];
 	if (process.browser) {
@@ -13,7 +13,7 @@
 	}
 
 	$: isAdmin = roles.includes("admin");
-	$: isStudent = roles.includes("student");
+	$: isStudent = isAuthorized();
 	
 </script>
 
