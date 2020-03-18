@@ -1,25 +1,8 @@
 <script context="module">
-    import {parseJwt} from '../../tools/auth'; 
     import { goto } from '@sapper/app';
-
-    function isAuthorized(session) {
-        if (session == null || session.user == null || !('jwt_token' in session.user)) {
-            return false;
-        }
-        let jwt = session.user.jwt_token;
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
     export async function preload(page, session) {
-        if (!isAuthorized(session)) {
-            goto('/')
+        if (session.auth == null) {
+            goto('/');
         }
     }
 </script>
@@ -32,11 +15,10 @@
     import {customFetch} from '../../tools/auth';
 
     const {session} = stores();
-    if ($session.user == null) {
+    if ($session.auth == null) {
         goto('/');
     }
     let jwt_token = $session.user.jwt_token;    
-
 
     const keyNames = {
         'githubLogin': 'login',

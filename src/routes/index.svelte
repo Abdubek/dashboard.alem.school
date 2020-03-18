@@ -4,22 +4,7 @@
     
 	const { session } = stores();
 
-    function isAuthorized() {
-        if ($session.user == null || !('jwt_token' in $session.user)) {
-            return false;
-        }
-        let jwt = $session.user.jwt_token;
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if (isAuthorized()) {
+    if ('auth' in $session) {
         goto('/leaderboard');
 	}
 	

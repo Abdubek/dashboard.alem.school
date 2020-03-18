@@ -1,25 +1,9 @@
 <script context="module">
-    import {parseJwt} from '../../tools/auth'; 
     import { goto } from '@sapper/app';
 
-    function isAuthorized(session) {
-        if (session == null || session.user == null || !('jwt_token' in session.user)) {
-            return false;
-        }
-        let jwt = session.user.jwt_token;
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-        return false;
-    }
     export async function preload(page, session) {
-        console.log(session);
-        if (!isAuthorized(session)) {
-            goto('/')
+        if (!('auth' in session)) {
+            goto('/leaderboard');
         }
         const {userId} = page.params;
         return {userId};
@@ -30,26 +14,9 @@
     import { stores } from '@sapper/app';
     
 	const { session } = stores();
-
-    function isAuthorized() {
-        const { session } = stores();
-        if ($session.user == null || !('jwt_token' in $session.user)) {
-            return false;
-        }
-        let jwt = $session.user.jwt_token;
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if (!isAuthorized()) {
+    if (!('auth' in $session)) {
         goto('/');
-    }
+	}
 
     let jwt_token = $session.user.jwt_token;    
 
