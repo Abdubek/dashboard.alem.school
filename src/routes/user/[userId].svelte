@@ -1,11 +1,25 @@
 <script context="module">
-    import {isAuthorized} from '../../tools/auth';
+    import {parseJwt} from '../../tools/auth'; 
+    import { goto } from '@sapper/app';
 
-    export async function preload(page, session) {
-        if (process.browser) {
-            if (!isAuthorized()) {
-                this.redirect(302, "/");
+    function isAuthorized(session) {
+        if (session == null || session.user == null || !('jwt_token' in session.user)) {
+            return false;
+        }
+        let jwt = session.user.jwt_token;
+        if (jwt) {
+            let result = parseJwt(jwt);
+            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+            if (auth != null) {
+                return true;
             }
+        }
+        return false;
+    }
+    export async function preload(page, session) {
+        console.log(session);
+        if (!isAuthorized(session)) {
+            goto('/')
         }
         const {userId} = page.params;
         return {userId};
@@ -13,6 +27,32 @@
 </script>
 
 <script>
+    import { stores } from '@sapper/app';
+    
+	const { session } = stores();
+
+    function isAuthorized() {
+        const { session } = stores();
+        if ($session.user == null || !('jwt_token' in $session.user)) {
+            return false;
+        }
+        let jwt = $session.user.jwt_token;
+        if (jwt) {
+            let result = parseJwt(jwt);
+            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+            if (auth != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (!isAuthorized()) {
+        goto('/');
+    }
+
+    let jwt_token = $session.user.jwt_token;    
+
     import {onMount} from 'svelte';
     import {customFetch} from '../../tools/auth';
     import {formatDate} from '../../tools/tools';
@@ -40,7 +80,7 @@
     onMount(() => {
         // Start calendar
 
-        customFetch(`${config.API_URL}/user/${userId}`).then(resp => {
+        customFetch(`${config.API_URL}/user/${userId}`, jwt_token).then(resp => {
             return resp.json();
         }).then(resp => {
             user = resp.user.data.user[0];

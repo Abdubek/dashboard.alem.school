@@ -2,18 +2,18 @@
 <script>
 	export let segment;
 
-	import {getRoles, isAuthorized} from '../tools/auth';
+	// import {getRoles} from '../tools/auth';
 
 	let roles = [];
-	if (process.browser) {
-		roles = getRoles();
-	}
-	$: if (segment != -1) {
-		roles = getRoles();
-	}
+	// if (process.browser) {
+	// 	roles = getRoles();
+	// }
+	// $: if (segment != -1) {
+	// 	roles = getRoles();
+	// }
 
-	$: isAdmin = roles.includes("admin");
-	$: isStudent = isAuthorized();
+	$: isAdmin = true;
+	$: isStudent = true;
 	
 </script>
 

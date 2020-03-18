@@ -1,9 +1,11 @@
-<script context="module">
-    export async function preload(page, session) {
-        if (process.browser) {
-            localStorage.removeItem("jwt_token");
-            localStorage.removeItem("access_token");
-            this.redirect(302, "/")
-        }
-    }
+<script>
+    import { goto, stores } from '@sapper/app';
+	import { post } from 'utils.js';
+    
+    const {session} = stores();
+
+    post(`auth/logout`).then(() => {
+        $session.user = null;
+        goto('/');
+    });
 </script>

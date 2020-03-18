@@ -1,11 +1,12 @@
 // contains functions related to authorization
-
+import atob from 'atob';
+import { goto } from '@sapper/app';
 import GateService from '../services/GateService';
 
 const gateService = new GateService();
 
 // parseJwt returns decoded object inside jwt
-function parseJwt(token) {
+export function parseJwt(token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -18,40 +19,39 @@ function parseJwt(token) {
 // getRoles returns roles in from jwt object
 export function getRoles() {
     let roles = [];
-    if (process.browser) {
-        let jwt = localStorage.getItem('jwt_token');
-        if (jwt) {
-            let result = parseJwt(jwt);
-            roles = result['https://hasura.io/jwt/claims']['x-hasura-allowed-roles'];
-        }
+    const { session } = stores();
+    if ($session.user == null || !('jwt_token' in $session.user)) {
+        return roles;
+    }
+    let jwt = $session.user.jwt_token;
+    if (jwt) {
+        let result = parseJwt(jwt);
+        roles = result['https://hasura.io/jwt/claims']['x-hasura-allowed-roles'];
     }
     return roles;
 }
 
 // getRoles returns roles in from jwt object
-export function isAuthorized() {
-    if (process.browser) {
-        let jwt = localStorage.getItem('jwt_token');
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
+// export function isAuthorized() {
+//     const { session } = stores();
+//     if ($session.user == null || !('jwt_token' in $session.user)) {
+//         return false;
+//     }
+//     let jwt = $session.user.jwt_token;
+//     if (jwt) {
+//         let result = parseJwt(jwt);
+//         const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+//         if (auth != null) {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 // customFetch is main function to call fetch to api.alem.school
 // if api returns 401 (Unauthorized) then it tries to refresh token
 // if refresh is impossible (invalid token) then commits logout
-export function customFetch(url, data={}) {
-    if (!process.browser || localStorage.getItem('jwt_token') == null) {
-        window.location.replace('/logout');
-        return
-    }
-    const jwtToken = localStorage.getItem('jwt_token');
+export function customFetch(url, jwtToken, data={}) {
     let fetchPromise = fetch(url, {
         ...data,
         headers: {'Authorization':jwtToken}
@@ -61,9 +61,9 @@ export function customFetch(url, data={}) {
             // otherwise make logout and redirect to /logout
             gateService.refreshToken(jwtToken).then(refreshData => {
                 if (refreshData['status'] == 300) {
-                    window.location.replace('/logout');
+                    goto('/logout');
                 } else if ('jwt_token' in refreshData) {
-                    localStorage.setItem('jwt_token', refreshData['jwt_token'])
+                    $session.user.jwt_token = refreshData['jwt_token']
                 }
             });
         } else if (!resp.ok) {

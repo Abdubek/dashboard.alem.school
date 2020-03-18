@@ -1,13 +1,30 @@
-<script context="module">
-	import {isAuthorized} from '../tools/auth';
+<script>
+	import { goto, stores } from '@sapper/app';
+	import config from '../tools/config';
+    
+	const { session } = stores();
 
-    export async function preload(page, session) {
-        if (process.browser) {
-            if (isAuthorized()) {
-                this.redirect(302, "/leaderboard");
+    function isAuthorized() {
+        if ($session.user == null || !('jwt_token' in $session.user)) {
+            return false;
+        }
+        let jwt = $session.user.jwt_token;
+        if (jwt) {
+            let result = parseJwt(jwt);
+            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+            if (auth != null) {
+                return true;
             }
         }
+        return false;
     }
+
+    if (isAuthorized()) {
+        goto('/leaderboard');
+	}
+	
+	const CLIENT_ID = config.CLIENT_ID;
+	const REDIRECT_URI = `${config.URL}/code/`
 </script>
 
 <style>
@@ -64,9 +81,3 @@
 	<img alt='alem logo' src='alem.svg'>
 	<a href="https://git.01.alem.school/login/oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code">Sign in</a>
 </figure>
-
-<script>
-	import config from '../tools/config';
-	const CLIENT_ID = config.CLIENT_ID;
-	const REDIRECT_URI = `${config.URL}/code/`
-</script>

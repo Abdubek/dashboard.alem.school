@@ -1,21 +1,43 @@
 <script context="module">
-    import {isAuthorized} from '../../tools/auth';
+    import {parseJwt} from '../../tools/auth'; 
+    import { goto } from '@sapper/app';
 
-    export async function preload(page, session) {
-        if (process.browser) {
-            if (!isAuthorized()) {
-                this.redirect(302, "/");
+    function isAuthorized(session) {
+        if (session == null || session.user == null || !('jwt_token' in session.user)) {
+            return false;
+        }
+        let jwt = session.user.jwt_token;
+        if (jwt) {
+            let result = parseJwt(jwt);
+            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+            if (auth != null) {
+                return true;
             }
+        }
+        return false;
+    }
+    
+    export async function preload(page, session) {
+        if (!isAuthorized(session)) {
+            goto('/')
         }
     }
 </script>
 
 <script>
+    import { stores } from '@sapper/app';
     import {onMount} from 'svelte';
     import Table from '../../components/Table.svelte';
     import config from '../../tools/config';
     import {customFetch} from '../../tools/auth';
-    
+
+    const {session} = stores();
+    if ($session.user == null) {
+        goto('/');
+    }
+    let jwt_token = $session.user.jwt_token;    
+
+
     const keyNames = {
         'githubLogin': 'login',
         'firstName': 'first name',
@@ -27,7 +49,7 @@
     let students = [];
 
     onMount(() => {
-        customFetch(`${config.API_URL}/leaderboard`).then(resp => {
+        customFetch(`${config.API_URL}/leaderboard`, jwt_token).then(resp => {
             return resp.json();
         }).then(result => {
             const rawData = result.data.event_user;
