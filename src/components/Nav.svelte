@@ -1,19 +1,18 @@
 
 <script>
+    import { stores } from '@sapper/app';
 	export let segment;
 
-	// import {getRoles} from '../tools/auth';
+	const {session} = stores();
 
 	let roles = [];
-	// if (process.browser) {
-	// 	roles = getRoles();
-	// }
-	// $: if (segment != -1) {
-	// 	roles = getRoles();
-	// }
 
-	$: isAdmin = true;
-	$: isStudent = true;
+	$: if (segment != -1 && $session.roles != null) {
+		roles = $session.roles;
+		console.log($session);
+	}
+	$: isAdmin = roles.includes('admin');
+	$: isStudent = $session.auth == true;
 	
 </script>
 

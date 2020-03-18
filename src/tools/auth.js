@@ -15,39 +15,9 @@ export function parseJwt(token) {
 
     return JSON.parse(jsonPayload);
 };
-
-// getRoles returns roles in from jwt object
-export function getRoles() {
-    let roles = [];
-    const { session } = stores();
-    if ($session.user == null || !('jwt_token' in $session.user)) {
-        return roles;
-    }
-    let jwt = $session.user.jwt_token;
-    if (jwt) {
-        let result = parseJwt(jwt);
-        roles = result['https://hasura.io/jwt/claims']['x-hasura-allowed-roles'];
-    }
-    return roles;
+export function getRoles () {
+    
 }
-
-// getRoles returns roles in from jwt object
-// export function isAuthorized() {
-//     const { session } = stores();
-//     if ($session.user == null || !('jwt_token' in $session.user)) {
-//         return false;
-//     }
-//     let jwt = $session.user.jwt_token;
-//     if (jwt) {
-//         let result = parseJwt(jwt);
-//         const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-//         if (auth != null) {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
 // customFetch is main function to call fetch to api.alem.school
 // if api returns 401 (Unauthorized) then it tries to refresh token
 // if refresh is impossible (invalid token) then commits logout

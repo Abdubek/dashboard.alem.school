@@ -30,7 +30,8 @@ polka()
 		sapper.middleware({
 			session: req => ({
 				user: req.session && req.session.user,
-				auth: req.session && req.session.auth
+				auth: req.session && req.session.auth,
+				roles: req.session && req.session.roles
 			})
 		})
 	)
