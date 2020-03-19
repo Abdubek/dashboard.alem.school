@@ -17,11 +17,10 @@ polka()
 		resave: false,
 		saveUninitialized: true,
 		cookie: {
-			maxAge: 31536000,
-			secure:  process.env.NODE_ENV === 'development' ? false : true
+			maxAge: 31536000
 		},
 		store: new FileStore({
-			path: process.env.NOW ? `/tmp/sessions` : `.sessions`
+			path: `.sessions`
 		})
 	}))
 	.use(
