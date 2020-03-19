@@ -6,6 +6,8 @@
 
     post(`auth/logout`).then(() => {
         $session.user = null;
+        $session.auth = null;
+        $session.roles = null;
         goto('/');
     });
 </script>

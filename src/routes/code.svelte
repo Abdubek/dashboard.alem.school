@@ -33,6 +33,7 @@
         const response = await post(`auth/login`, data);
         if (response.jwt_token) {
 			$session.user = response;
+			$session.auth = true;
             goto('/leaderboard');
 		}
     }
