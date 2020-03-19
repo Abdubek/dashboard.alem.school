@@ -3,9 +3,8 @@
 	import config from '../tools/config';
     
 	const { session } = stores();
-
-    if ('auth' in $session) {
-        goto('/leaderboard');
+	if ($session.auth == true) {
+		goto('/leaderboard');
 	}
 	
 	const CLIENT_ID = config.CLIENT_ID;

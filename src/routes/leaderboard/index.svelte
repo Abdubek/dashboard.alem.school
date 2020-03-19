@@ -1,8 +1,7 @@
 <script context="module">
-    import { goto } from '@sapper/app';
-    export async function preload(page, session) {
+    export function preload(page, session) {
         if (session.auth == null) {
-            goto('/');
+            this.redirect(302, "/");
         }
     }
 </script>
@@ -15,9 +14,6 @@
     import {customFetch} from '../../tools/auth';
 
     const {session} = stores();
-    if ($session.auth == null) {
-        goto('/');
-    }
     let jwt_token = $session.user.jwt_token;    
 
     const keyNames = {

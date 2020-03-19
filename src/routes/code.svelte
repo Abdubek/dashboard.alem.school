@@ -24,11 +24,12 @@
     }
 
     async function init() {
-        let result = await fetch(`${config.AUTH_URL}/?code=${query.code}`)
+        const result = await fetch(`${config.AUTH_URL}/?code=${query.code}`)
         if (!result.ok) {
             throw new Error("Response error.");
         }
-        let data = await result.json();
+        const data = await result.json();
+        
         const response = await post(`auth/login`, data);
         if (response.jwt_token) {
 			$session.user = response;

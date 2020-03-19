@@ -1,9 +1,7 @@
 <script context="module">
-    import { goto } from '@sapper/app';
-
     export async function preload(page, session) {
-        if (!('auth' in session)) {
-            goto('/leaderboard');
+        if (session.auth == null) {
+            this.redirect(302, "/");
         }
         const {userId} = page.params;
         return {userId};
@@ -14,10 +12,6 @@
     import { stores } from '@sapper/app';
     
 	const { session } = stores();
-    if (!('auth' in $session)) {
-        goto('/');
-	}
-
     let jwt_token = $session.user.jwt_token;    
 
     import {onMount} from 'svelte';

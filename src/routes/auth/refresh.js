@@ -1,4 +1,4 @@
-import GateService from '../services/GateService';
+import GateService from '../../services/GateService';
 
 const gateService = new GateService();
 

@@ -12,6 +12,7 @@ const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 
 polka()
+	.use(bodyParser.json())
 	.use(session({
 		secret: 'conduit',
 		resave: false,
