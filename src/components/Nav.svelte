@@ -5,13 +5,7 @@
 
 	const {session} = stores();
 
-	let roles = [];
-
-	$: if (segment != -1 && $session.roles != null) {
-		roles = $session.roles;
-	}
-	$: isAdmin = roles.includes('admin');
-	$: isStudent = $session.auth == true;
+	$: isAuth = $session.auth == true;
 	
 </script>
 
@@ -72,17 +66,13 @@
 <nav>
 	<ul>
 		<li><a class:selected='{segment === undefined}' href='.'><img alt='alem logo' src='alem.png'/></a></li>
-		{#if isStudent}
+		{#if isAuth}
 		<li><a class:selected='{segment === "leaderboard"}' href='leaderboard'>leaderboard</a></li>
-		{/if}
-
-		{#if isAdmin}
-		<li><a class:selected='{segment === "admin"}' href='admin'>admin</a></li>
 		{/if}
 
 		<!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
 		     the blog data when we hover over the link or tap it on a touchscreen -->
-		{#if isAdmin || isStudent}
+		{#if isAuth}
 		<li class="right"><a href='logout'>logout</a></li>
 		{/if}
 		<li class="right"><a target="_blank" href='https://blog.alem.school'>blog</a></li>
