@@ -9,7 +9,6 @@
 
 	$: if (segment != -1 && $session.roles != null) {
 		roles = $session.roles;
-		console.log($session);
 	}
 	$: isAdmin = roles.includes('admin');
 	$: isStudent = $session.auth == true;

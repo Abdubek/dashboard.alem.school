@@ -1,9 +1,7 @@
 // contains functions related to authorization
 import atob from 'atob';
 import { goto } from '@sapper/app';
-import GateService from '../services/GateService';
-
-const gateService = new GateService();
+import { post } from 'utils.js';
 
 // parseJwt returns decoded object inside jwt
 export function parseJwt(token) {
@@ -21,19 +19,19 @@ export function getRoles () {
 // customFetch is main function to call fetch to api.alem.school
 // if api returns 401 (Unauthorized) then it tries to refresh token
 // if refresh is impossible (invalid token) then commits logout
-export function customFetch(url, jwtToken, data={}) {
+export function customFetch(url, jwt_token, data={}) {
     let fetchPromise = fetch(url, {
         ...data,
-        headers: {'Authorization':jwtToken}
+        headers: {'Authorization':jwt_token}
     }).then(resp => {
         if (resp.status == 401) {
             // try to refresh token
             // otherwise make logout and redirect to /logout
-            gateService.refreshToken(jwtToken).then(refreshData => {
-                if (refreshData['status'] == 300) {
-                    goto('/logout');
-                } else if ('jwt_token' in refreshData) {
+            post(`auth/refresh`, {'jwt_token': jwt_token}).then(resp => {
+                if (resp.status == 200) {
                     $session.user.jwt_token = refreshData['jwt_token']
+                } else {
+                    goto('/logout');
                 }
             });
         } else if (!resp.ok) {
