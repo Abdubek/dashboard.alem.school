@@ -1,26 +1,39 @@
+<script context="module">
+    export async function preload(page, session) {
+        const query = page.query;
+		return { query };
+	}
+</script>
+
 <script>
     import {onMount} from 'svelte';
     import { stores, goto } from '@sapper/app';
     import config from '../tools/config';
-    const { page } = stores();
-    const query = $page.query;
+	import { post } from 'utils.js';
+    export let query;
+	const { session } = stores();
+
     // If no 'code' key in query
     if ('code' in query) {
         onMount(() => {
-            fetch(`${config.AUTH_URL}/?code=${query.code}`).then(resp => {
-                if (!resp.ok) {
-                    throw new Error("Response error.");
-                }
-                return resp.json();
-            }).then(data => {
-                for (var key in data) {
-                    localStorage.setItem(key, data[key]);
-                }
-                goto('/leaderboard');
-            }).catch(err => {
+            init().catch(err => {
                 console.log("err", err);
                 goto('/');
             });
         });
+    }
+
+    async function init() {
+        const result = await fetch(`${config.AUTH_URL}/?code=${query.code}`)
+        if (!result.ok) {
+            throw new Error("Response error.");
+        }
+        const data = await result.json();
+        
+        const response = await post(`auth/login`, data);
+        if (response.jwt_token) {
+			$session.user = response;
+            goto('/leaderboard');
+		}
     }
 </script>

@@ -1,11 +1,10 @@
 // contains functions related to authorization
-
-import GateService from '../services/GateService';
-
-const gateService = new GateService();
+import atob from 'atob';
+import { goto } from '@sapper/app';
+import { post } from 'utils.js';
 
 // parseJwt returns decoded object inside jwt
-function parseJwt(token) {
+export function parseJwt(token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -14,56 +13,25 @@ function parseJwt(token) {
 
     return JSON.parse(jsonPayload);
 };
-
-// getRoles returns roles in from jwt object
-export function getRoles() {
-    let roles = [];
-    if (process.browser) {
-        let jwt = localStorage.getItem('jwt_token');
-        if (jwt) {
-            let result = parseJwt(jwt);
-            roles = result['https://hasura.io/jwt/claims']['x-hasura-allowed-roles'];
-        }
-    }
-    return roles;
+export function getRoles () {
+    
 }
-
-// getRoles returns roles in from jwt object
-export function isAuthorized() {
-    if (process.browser) {
-        let jwt = localStorage.getItem('jwt_token');
-        if (jwt) {
-            let result = parseJwt(jwt);
-            const auth = result['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-            if (auth != null) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 // customFetch is main function to call fetch to api.alem.school
 // if api returns 401 (Unauthorized) then it tries to refresh token
 // if refresh is impossible (invalid token) then commits logout
-export function customFetch(url, data={}) {
-    if (!process.browser || localStorage.getItem('jwt_token') == null) {
-        window.location.replace('/logout');
-        return
-    }
-    const jwtToken = localStorage.getItem('jwt_token');
+export function customFetch(url, jwt_token, data={}) {
     let fetchPromise = fetch(url, {
         ...data,
-        headers: {'Authorization':jwtToken}
+        headers: {'Authorization':jwt_token}
     }).then(resp => {
         if (resp.status == 401) {
             // try to refresh token
             // otherwise make logout and redirect to /logout
-            gateService.refreshToken(jwtToken).then(refreshData => {
-                if (refreshData['status'] == 300) {
-                    window.location.replace('/logout');
-                } else if ('jwt_token' in refreshData) {
-                    localStorage.setItem('jwt_token', refreshData['jwt_token'])
+            post(`auth/refresh`, {'jwt_token': jwt_token}).then(resp => {
+                if (resp.status == 200) {
+                    $session.user.jwt_token = refreshData['jwt_token']
+                } else {
+                    goto('/logout');
                 }
             });
         } else if (!resp.ok) {

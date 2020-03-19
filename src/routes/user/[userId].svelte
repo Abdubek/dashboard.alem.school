@@ -1,11 +1,7 @@
 <script context="module">
-    import {isAuthorized} from '../../tools/auth';
-
     export async function preload(page, session) {
-        if (process.browser) {
-            if (!isAuthorized()) {
-                this.redirect(302, "/");
-            }
+        if (session.auth == null) {
+            this.redirect(302, "/");
         }
         const {userId} = page.params;
         return {userId};
@@ -13,6 +9,11 @@
 </script>
 
 <script>
+    import { stores } from '@sapper/app';
+    
+	const { session } = stores();
+    let jwt_token = $session.user.jwt_token;    
+
     import {onMount} from 'svelte';
     import {customFetch} from '../../tools/auth';
     import {formatDate} from '../../tools/tools';
@@ -40,7 +41,7 @@
     onMount(() => {
         // Start calendar
 
-        customFetch(`${config.API_URL}/user/${userId}`).then(resp => {
+        customFetch(`${config.API_URL}/user/${userId}`, jwt_token).then(resp => {
             return resp.json();
         }).then(resp => {
             user = resp.user.data.user[0];

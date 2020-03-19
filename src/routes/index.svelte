@@ -1,13 +1,14 @@
-<script context="module">
-	import {isAuthorized} from '../tools/auth';
-
-    export async function preload(page, session) {
-        if (process.browser) {
-            if (isAuthorized()) {
-                this.redirect(302, "/leaderboard");
-            }
-        }
-    }
+<script>
+	import { goto, stores } from '@sapper/app';
+	import config from '../tools/config';
+    
+	const { session } = stores();
+	if ($session.auth == true) {
+		goto('/leaderboard');
+	}
+	
+	const CLIENT_ID = config.CLIENT_ID;
+	const REDIRECT_URI = `${config.URL}/code/`
 </script>
 
 <style>
@@ -64,9 +65,3 @@
 	<img alt='alem logo' src='alem.svg'>
 	<a href="https://git.01.alem.school/login/oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code">Sign in</a>
 </figure>
-
-<script>
-	import config from '../tools/config';
-	const CLIENT_ID = config.CLIENT_ID;
-	const REDIRECT_URI = `${config.URL}/code/`
-</script>
