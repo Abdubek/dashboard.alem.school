@@ -15,9 +15,9 @@
     let jwt_token = $session.user.jwt_token;    
 
     import {onMount} from 'svelte';
-    import {customFetch} from '../../tools/auth';
-    import {formatDate} from '../../tools/tools';
-    import config from '../../tools/config';
+    import {customFetch} from '../../../tools/auth';
+    import {formatDate} from '../../../tools/tools';
+    import config from '../../../tools/config';
     export let userId;
     let user;
     let xp;
