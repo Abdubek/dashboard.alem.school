@@ -86,6 +86,9 @@
 
 {#if toad}
     <h3>Toad</h3>
+    {#if 'attempts' in toad}
+        <p>Attempts: {toad.attempts.length+1}</p>
+    {/if}
     <p>Score: {toad.score}</p>
     <p>Memory: {toad.games[0].results.length}</p>
     <p>Zzle: {toad.games[1].results.length}</p>
