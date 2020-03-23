@@ -36,6 +36,7 @@
         customFetch(`${config.API_URL}/user/${userId}/piscine`, jwt_token).then(resp => {
             return resp.json();
         }).then(resp => {
+            console.log(resp);
             user = resp.user.data.user[0];
             exams = resp.exams.data;
             raidNotes = resp.raidNotes.data.progress;
@@ -99,7 +100,9 @@
     {#each raidNotes as raidNote, index}
         <h3>{raidNames[index]}</h3>
         <p>{raidNote.attrs.assignedReviewerId}</p>
-        <p>{@html raidNote.attrs.note.replace(/\n/g, '<br />')}</p>
+        {#if 'note' in raidNote.attrs}
+            <p>{@html raidNote.attrs.note.replace(/\n/g, '<br />')}</p>
+        {/if}
     {/each}
 {/if}
 

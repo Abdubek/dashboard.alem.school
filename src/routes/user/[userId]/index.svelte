@@ -52,7 +52,7 @@
             image = resp.image.data[0].face;
             examObjects = resp.exams.data.object;
             examRecords = resp.examRecords.data;
-
+            console.log(resp);
             // exam
             for (let i = 0; i < examObjects.length; i++) {
                 const obj = examObjects[i];
@@ -130,15 +130,17 @@
                     }
                 }
             }
-            const lastIndex = attendance.length-1;
-            if(attendance[lastIndex].status == 1) {
-                const now = new Date();
-                const last = new Date(`${attendance[lastIndex].date}T${attendance[lastIndex].time}`);
-                if (!(attendance[lastIndex].date in timeSpent)) {
-                    timeSpent[attendance[lastIndex].date] = 0;
+            if (attendance.length > 0) {
+                const lastIndex = attendance.length-1;
+                if (attendance[lastIndex].status == 1) {
+                    const now = new Date();
+                    const last = new Date(`${attendance[lastIndex].date}T${attendance[lastIndex].time}`);
+                    if (!(attendance[lastIndex].date in timeSpent)) {
+                        timeSpent[attendance[lastIndex].date] = 0;
+                    }
+                    timeSpent[attendance[lastIndex].date] += diffMins(last, now);
+                    inBuilding = true;
                 }
-                timeSpent[attendance[lastIndex].date] += diffMins(last, now);
-                inBuilding = true;
             }
             calendar = new Cal("divCal");			
             calendar.showcurr();
