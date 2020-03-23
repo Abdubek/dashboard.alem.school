@@ -134,12 +134,15 @@
                 const lastIndex = attendance.length-1;
                 if (attendance[lastIndex].status == 1) {
                     const now = new Date();
-                    const last = new Date(`${attendance[lastIndex].date}T${attendance[lastIndex].time}`);
-                    if (!(attendance[lastIndex].date in timeSpent)) {
-                        timeSpent[attendance[lastIndex].date] = 0;
+                    const days = diffDays(now, checkin);
+                    if (days == 0) {
+                        const last = new Date(`${attendance[lastIndex].date}T${attendance[lastIndex].time}`);
+                        if (!(attendance[lastIndex].date in timeSpent)) {
+                            timeSpent[attendance[lastIndex].date] = 0;
+                        }
+                        timeSpent[attendance[lastIndex].date] += diffMins(last, now);
+                        inBuilding = true;
                     }
-                    timeSpent[attendance[lastIndex].date] += diffMins(last, now);
-                    inBuilding = true;
                 }
             }
             calendar = new Cal("divCal");			
