@@ -330,8 +330,8 @@
 </script>
 
 {#if user}
-<div class="profile-header">
-    <div class="flex-grid">
+<div class="flex-grid">
+    <div class="profile-header">
         <div class="image">
             <img src="data:image/png;base64, {image}" alt="{user.githubLogin}" />
         </div>
@@ -348,7 +348,7 @@
 <div class="flex-grid margin-center">
     <div class="projects">
         <h2>Projects</h2>
-        <div style="width:20rem; height:25rem; overflow:auto;">
+        <div class="calendar-wrapper" style="width:20rem; height:25rem; overflow:auto;">
             <table>
                 {#each projects as project (project.object.name)}
                 <tr>
@@ -384,8 +384,20 @@ p {
     margin: 0;
 }
 
+.profile-header {
+    display: flex;
+}
+
 .profile-header img {
     height: 10rem;
+}
+
+.profile-header > div {
+    margin: 0 20px 0 0;
+}
+
+.profile-header > div:last-child {
+	margin-right: 0;
 }
 
 .legend {
