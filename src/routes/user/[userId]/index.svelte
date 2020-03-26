@@ -10,15 +10,13 @@
 
 <script>
     import { stores } from '@sapper/app';
-    
-	const { session } = stores();
-    let jwt_token = $session.user.jwt_token;    
-
     import {onMount} from 'svelte';
     import {customFetch} from '../../../tools/auth';
     import {formatDate} from '../../../tools/tools';
     import config from '../../../tools/config';
     export let userId;
+    const { session } = stores();
+    let jwt_token = $session.user.jwt_token;
     let user;
     let xp;
     let audits;
@@ -27,6 +25,8 @@
     let image;
     let examObjects;
     let examRecords;
+    let calendarTable;
+
 
     // object, key - date, value - amount of minutes in building
     let timeSpent = {};
@@ -40,7 +40,6 @@
     let inBuilding = false;
     onMount(() => {
         // Start calendar
-
         customFetch(`${config.API_URL}/user/${userId}`, jwt_token).then(resp => {
             return resp.json();
         }).then(resp => {
@@ -145,6 +144,7 @@
                     }
                 }
             }
+
             calendar = new Cal("divCal");			
             calendar.showcurr();
         }).catch(err => {
@@ -323,48 +323,86 @@
         // Closes table
         html += '</table>';
         // Write HTML to the div
-        document.getElementById(this.divId).innerHTML = html;
+        calendarTable = html;
     };
 
     $: presence = inBuilding ? "in" : "out";
 </script>
 
 {#if user}
-<img src="data:image/png;base64, {image}" height=300 alt="{user.githubLogin}" />
-<h1>{user.githubLogin}, {presence}</h1>
-<p>{user.firstName} {user.lastName}</p>
-<p>{user.tel}</p>
-<p>{xp}xp, {audits} audits</p>
+<div class="profile-header">
+    <div class="flex-grid">
+        <div class="image">
+            <img src="data:image/png;base64, {image}" alt="{user.githubLogin}" />
+        </div>
+        <div class="info">
+            <h1>{user.githubLogin} <span class="legend {presence}"></span></h1>
+            <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
+            <p>{user.firstName} {user.lastName}</p>
+            <p>{user.tel}</p>
+            <p>{xp}xp, {audits} audits</p>
+        </div>
+    </div>
+</div>
 
-<h2>Projects</h2>
-<ul>
-    {#each projects as project (project.object.name)}
-    <li>{project.object.name}</li>
-    {/each}
-</ul>
+<div class="flex-grid margin-center">
+    <div class="projects">
+        <h2>Projects</h2>
+        <div style="width:20rem; height:25rem; overflow:auto;">
+            <table>
+                {#each projects as project (project.object.name)}
+                <tr>
+                    <td>{project.object.name}</td>
+                </tr>
+                {/each}
+            </table>
+        </div>
+    </div>
+    <div>
+        <h2>Attendance</h2>
+        <div class="calendar-wrapper">
+            <button id="btnPrev" type="button" on:click="{() => {calendar.previousMonth()}}">Prev</button>
+            <button id="btnNext" type="button" on:click="{() => {calendar.nextMonth()}}">Next</button>
+        <div id="divCal" contenteditable="true" bind:innerHTML={calendarTable}></div>
+        </div>
+    </div>
+</div>
 {/if}
 
-<h2>Attendance</h2>
-<div class="calendar-wrapper">
-    <button id="btnPrev" type="button" on:click="{() => {calendar.previousMonth()}}">Prev</button>
-    <button id="btnNext" type="button" on:click="{() => {calendar.nextMonth()}}">Next</button>
-  <div id="divCal"></div>
-</div>
 
 {#if user}
 <h2>Exams</h2>
 {#each Object.keys(exams) as eventID (eventID)}
-    <h3>Exam {formatDate(new Date(exams[eventID].createdAt))}</h3>
-    {#each exams[eventID].transactions as transaction, index}
-        <p>level {index+1}, {transaction.amount}xp</p>
-    {:else}
-        <p>Not taken.</p>
-    {/each}
+    <h3>Exam {formatDate(new Date(exams[eventID].createdAt))} {exams[eventID].transactions.length}</h3>
 {/each}
 {/if}
 
 
 <style>
+
+p {
+    margin: 0;
+}
+
+.profile-header img {
+    height: 10rem;
+}
+
+.legend {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 100%;
+}
+
+.in {
+    background-color: #2ecc71;
+}
+
+.out {
+    background-color: #de8178;
+}
+
 .calendar-wrapper {
   width: 300px;
   margin: 0em auto;
