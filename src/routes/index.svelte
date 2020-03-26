@@ -12,23 +12,18 @@
 </script>
 
 <style>
-	figure{
-		text-align: center;
-		margin: 0 auto;
-	}
-
 	figure {
-		margin: 50% 0;
+		display: flex;
+		height: 100%; 
+		justify-content: center;
+		align-items: center;
 	}
 
 	img {
-		width: 100%;
 		max-width: 400px;
 	}
 
-
 	a {
-		display: block;
 		margin: 0 auto;
 		padding: 1rem 2rem;
 		background-color: white;
@@ -36,7 +31,6 @@
 		border-radius: 3px;
 		font-size: 1rem;
 		text-decoration: none;
-		width: 3rem;
 
 		-webkit-transition: all 0.2s ease-out;
 		-moz-transition: all 0.2s ease-out;
@@ -62,6 +56,8 @@
 </svelte:head>
 
 <figure>
-	<img alt='alem logo' src='alem.svg'>
-	<a href="https://git.01.alem.school/login/oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code">Sign in</a>
+	<div class="login">
+		<img alt='alem logo' src='alem.svg'>
+		<a href="https://git.01.alem.school/login/oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code">sign in</a>
+	</div>
 </figure>

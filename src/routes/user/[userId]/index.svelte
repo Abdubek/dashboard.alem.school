@@ -11,9 +11,14 @@
 <script>
     import { stores } from '@sapper/app';
     import {onMount} from 'svelte';
+    
     import {customFetch} from '../../../tools/auth';
     import {formatDate} from '../../../tools/tools';
     import config from '../../../tools/config';
+
+    import { fade } from 'svelte/transition';
+    import Loading from '../../../components/Loading.svelte';
+    
     export let userId;
     const { session } = stores();
     let jwt_token = $session.user.jwt_token;
@@ -26,7 +31,6 @@
     let examObjects;
     let examRecords;
     let calendarTable;
-
 
     // object, key - date, value - amount of minutes in building
     let timeSpent = {};
@@ -51,7 +55,7 @@
             image = resp.image.data[0].face;
             examObjects = resp.exams.data.object;
             examRecords = resp.examRecords.data;
-            console.log(resp);
+
             // exam
             for (let i = 0; i < examObjects.length; i++) {
                 const obj = examObjects[i];
@@ -145,12 +149,16 @@
                 }
             }
 
+            return true;
+        }).then(() => {
             calendar = new Cal("divCal");			
             calendar.showcurr();
         }).catch(err => {
             console.log(`Error: ${err}`);
         });
     });
+
+    // $: calendarTable.innerHTML = calendarTableHTML;
 
     function diffMins(dt2, dt1) {
         var diff =(dt2.getTime() - dt1.getTime()) / 1000;
@@ -323,11 +331,19 @@
         // Closes table
         html += '</table>';
         // Write HTML to the div
-        calendarTable = html;
+        calendarTable.innerHTML = html;
     };
 
     $: presence = inBuilding ? "in" : "out";
+    $: githubLogin = user == null ? "Loading..." : user.githubLogin;
 </script>
+
+
+<svelte:head>
+	<title>
+        {githubLogin} | dashboard
+    </title>
+</svelte:head>
 
 {#if user}
 <div class="flex-grid">
@@ -336,19 +352,20 @@
             <img src="data:image/png;base64, {image}" alt="{user.githubLogin}" />
         </div>
         <div class="info">
-            <h1>{user.githubLogin} <span class="legend {presence}"></span></h1>
+            <h3>{user.githubLogin} <span class="legend {presence}"></span></h3>
             <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
             <p>{user.firstName} {user.lastName}</p>
             <p>{user.tel}</p>
-            <p>{xp}xp, {audits} audits</p>
+            <p>{xp} <strong>xp</strong></p>
+            <p>{audits} <strong>audits</strong></p>
         </div>
     </div>
 </div>
 
-<div class="flex-grid margin-center">
+<div class="flex-grid">
     <div class="projects">
         <h2>Projects</h2>
-        <div class="calendar-wrapper" style="width:20rem; height:25rem; overflow:auto;">
+        <div class="calendar-wrapper" style="height:25rem; overflow:auto;">
             <table>
                 {#each projects as project (project.object.name)}
                 <tr>
@@ -363,18 +380,19 @@
         <div class="calendar-wrapper">
             <button id="btnPrev" type="button" on:click="{() => {calendar.previousMonth()}}">Prev</button>
             <button id="btnNext" type="button" on:click="{() => {calendar.nextMonth()}}">Next</button>
-        <div id="divCal" contenteditable="true" bind:innerHTML={calendarTable}></div>
+            <div id="divCal" bind:this={calendarTable}></div>
         </div>
     </div>
 </div>
-{/if}
-
-
-{#if user}
 <h2>Exams</h2>
 {#each Object.keys(exams) as eventID (eventID)}
     <h3>Exam {formatDate(new Date(exams[eventID].createdAt))} {exams[eventID].transactions.length}</h3>
 {/each}
+
+{:else}
+    <div transition:fade>
+        <Loading/>
+    </div>
 {/if}
 
 
@@ -390,6 +408,7 @@ p {
 
 .profile-header img {
     height: 10rem;
+    border-radius:5px;
 }
 
 .profile-header > div {

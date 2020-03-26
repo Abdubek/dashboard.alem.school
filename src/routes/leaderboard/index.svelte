@@ -73,6 +73,12 @@
     }
 </script>
 
+<svelte:head>
+	<title>
+        leaderboard | dashboard
+    </title>
+</svelte:head>
+
 <Table
     bind:data={students}
     ignoreKeys={ignoreKeys}

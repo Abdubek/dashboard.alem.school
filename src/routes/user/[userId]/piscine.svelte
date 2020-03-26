@@ -18,6 +18,10 @@
     import {customFetch} from '../../../tools/auth';
     import {formatDate} from '../../../tools/tools';
     import config from '../../../tools/config';
+
+    import { fade } from 'svelte/transition';
+    import Loading from '../../../components/Loading.svelte';
+
     export let userId;
     
     let examNames = ["Exam 01", "Exam 02", "Exam 03", "Final Exam"]
@@ -77,50 +81,138 @@
         }
         return result;
     }
+
+    $: githubLogin = user == null ? "Loading..." : user.githubLogin;
 </script>
 
+<svelte:head>
+    <title>
+        {githubLogin} | dashboard
+    </title>
+</svelte:head>
+
 {#if user}
-    <h2>{user.firstName} {user.lastName}</h2>
-    <p>{user.githubLogin}</p>
-{/if}
+<h2>{user.firstName} <strong>"{user.githubLogin}"</strong> {user.lastName}</h2>
 
-{#if toad}
-    <h3>Toad</h3>
-    {#if 'attempts' in toad}
-        <p>Attempts: {toad.attempts.length+1}</p>
-    {/if}
-    <p>Score: {toad.score}</p>
-    <p>Memory: {toad.games[0].results.length}</p>
-    <p>Zzle: {toad.games[1].results.length}</p>
-{/if}
-
-{#if raidNotes}
-    <h3>Raid</h3>
-    {#each raidNotes as raidNote, index}
-        <h3>{raidNames[index]}</h3>
-        <p>{raidNote.attrs.assignedReviewerId}</p>
-        {#if 'note' in raidNote.attrs}
-            <p>{@html raidNote.attrs.note.replace(/\n/g, '<br />')}</p>
+<div class="flex-grid">
+    <div>
+        <h2>Toad</h2>
+        {#if 'attempts' in toad}
+            <p>⏳ attempts = {toad.attempts.length+1}</p>
         {/if}
-    {/each}
+        <p>💾 memory = {toad.games[0].results.length}</p>
+        <p>🕹 zzle = {toad.games[1].results.length}</p>
+    </div>
+    <div>
+        {#if raidNotes}
+            <h2>Raid</h2>
+            {#each raidNotes as raidNote, index}
+                {#if raidNote.attrs.assignedReviewerId != null}
+                    <p class="raid"><strong>{raidNames[index]}</strong> reviewer: {raidNote.attrs.assignedReviewerId}</p>
+                    {#if 'note' in raidNote.attrs}
+                        <p class="review">{@html raidNote.attrs.note.replace(/\n/g, '<br />')}</p>
+                    {/if}
+                {/if}
+            {/each}
+        {/if}
+    </div>
+</div>
+
+<div class="flex-grid">
+    <div>
+        <h2>Exams</h2>
+        <div class="scrollable">
+            <table>
+                <thead>
+                    <tr>
+                        <td>level</td>
+                        <td>exercise</td>
+                        <td>xp</td>
+                    </tr>
+                </thead>
+                {#each Object.keys(exams) as key, index (key)}
+                    <tr>
+                        <td colspan="3"><strong>{examNames[index]}</strong></td>
+                    </tr>
+                    {#each exams[key] as exercise, jndex (exercise)}
+                        <tr>
+                            <td>{jndex+1}</td>
+                            <td>{exerciseNames[exercise.attrs.objectId]}</td>
+                            <td>{exercise.amount}</td>
+                        </tr>
+                    {/each}
+                {/each}
+            </table>
+        </div>
+    </div>
+    <div>
+        <h2>Quests</h2>
+        <div class="scrollable">
+            <table>
+                <thead>
+                    <tr>
+                        <td>success</td>
+                        <td>exercise</td>
+                        <td>attempts</td>
+                    </tr>
+                </thead>
+                {#each Object.keys(quests) as key (key)}
+                    <tr>
+                        <td colspan="3"><strong>{key}</strong></td>
+                    </tr>
+                    {#each Object.keys(quests[key]) as exercise (exercise)}
+                        <tr>
+                            <td>{quests[key][exercise].done ? '✅' : '❌'}</td>
+                            <td>{exercise}</td>
+                            <td>{quests[key][exercise].attempts+1}</td>
+                        </tr>
+                    {/each}
+                {/each}
+            </table>
+        </div>
+    </div>
+</div>
+
+{:else}
+    <div transition:fade>
+        <Loading/>
+    </div>
 {/if}
 
-{#if exams}
-    <h3>Exams</h3>
-    {#each Object.keys(exams) as key, index (key)}
-        <h3>{examNames[index]}</h3>
-        {#each exams[key] as exercise, jndex (exercise)}
-            <p>{jndex+1}. {exercise.amount}xp, {exerciseNames[exercise.attrs.objectId]}</p>
-        {/each}
-    {/each}
-{/if}
+<style>
+p {
+    margin: 0;
+}
+.raid {
+    margin-top: 1rem;
+}
 
-{#if quests}
-    <h3>Quests</h3>
-    {#each Object.keys(quests) as key (key)}
-        <h3>{key}</h3>
-        {#each Object.keys(quests[key]) as exercise (exercise)}
-            <p>{quests[key][exercise].done ? '✅' : '❌'} {exercise}, {quests[key][exercise].attempts} attempts</p>
-        {/each}
-    {/each}
-{/if}
+.review {
+    padding: 15px;
+    background-color: rgba(242,243,244, 0.6);
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.scrollable {
+    height:25rem;
+    overflow:auto;
+}
+
+table {
+  clear: both;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  border-collapse: collapse;
+  color: #444;
+}
+td {
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+  width: 14.28571429%;
+}
+
+</style>
