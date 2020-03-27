@@ -245,7 +245,7 @@
         , lastDateOfMonth =  new Date(y, m+1, 0).getDate()
         // Last day of the previous month
         , lastDayOfLastMonth = m == 0 ? new Date(y-1, 11, 0).getDate() : new Date(y, m, 0).getDate();
-        var html = '<table>';
+        var html = '<table class="calendar">';
         // Write selected month and year
         html += '<thead><tr>';
         html += '<td colspan="7">' + this.Months[m] + ' ' + y + '</td>';
@@ -436,11 +436,27 @@ p {
     background-color: #de8178;
 }
 
+.projects table {
+  clear: both;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  border-collapse: collapse;
+  color: #444;
+}
+.projects td {
+  text-align: left;
+  padding: 3px 1rem;
+  vertical-align: middle;
+  border-right: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+}
+
 .calendar-wrapper {
-  width: 300px;
+  width: 100%;
   margin: 0em auto;
 }
-:global(table) {
+:global(table.calendar) {
   clear: both;
   width: 100%;
   border: 1px solid #dcdcff;
@@ -448,7 +464,7 @@ p {
   border-collapse: collapse;
   color: #444;
 }
-:global(td) {
+:global(.calendar td) {
   height: 48px;
   text-align: center;
   vertical-align: middle;
@@ -456,7 +472,7 @@ p {
   border-top: 1px solid #dcdcff;
   width: 14.28571429%;
 }
-:global(td.not-current) {
+:global(.calendar td.not-current) {
   color: #c0c0c0;
 }
 :global(td.today) {
@@ -464,7 +480,7 @@ p {
   color: #28283b;
   font-size: 1em;
 }
-:global(thead td) {
+:global(.calendar thead td) {
   border: none;
   color: #28283b;
   text-transform: uppercase;
