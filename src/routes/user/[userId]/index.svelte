@@ -346,18 +346,20 @@
 </svelte:head>
 
 {#if user}
+<h1>
+    <span class="legend {presence}"></span>
+    {user.firstName} <strong>"{user.githubLogin}"</strong> {user.lastName}
+</h1>
 <div class="flex-grid">
     <div class="profile-header">
         <div class="image">
             <img src="data:image/png;base64, {image}" alt="{user.githubLogin}" />
         </div>
         <div class="info">
-            <h3>{user.githubLogin} <span class="legend {presence}"></span></h3>
-            <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
-            <p>{user.firstName} {user.lastName}</p>
             <p>{user.tel}</p>
             <p>{xp} <strong>xp</strong></p>
             <p>{audits} <strong>audits</strong></p>
+            <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
         </div>
     </div>
 </div>
