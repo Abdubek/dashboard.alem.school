@@ -40,10 +40,13 @@
         customFetch(`${config.API_URL}/user/${userId}/piscine`, jwt_token).then(resp => {
             return resp.json();
         }).then(resp => {
+            console.log(resp);
             user = resp.user.data.user[0];
             exams = resp.exams.data;
             raidNotes = resp.raidNotes.data.progress;
-            toad = resp.toad.data.progress[0].attrs;
+            if (resp.toad.data.progress.length > 0) {
+                toad = resp.toad.data.progress[0].attrs;
+            }
             questsData = resp.quests.data;
 
             quests = preprocessQuests(questsData);
@@ -96,12 +99,16 @@
 
 <div class="flex-grid">
     <div>
-        <h2>Toad</h2>
-        {#if 'attempts' in toad}
-            <p>⏳ attempts = {toad.attempts.length+1}</p>
+        {#if toad}
+            <h2>Toad</h2>
+            {#if 'attempts' in toad}
+                <p>⏳ attempts = {toad.attempts.length+1}</p>
+            {/if}
+            <p>💾 memory = {toad.games[0].results.length}</p>
+            <p>🕹 zzle = {toad.games[1].results.length}</p>
+        {:else}
+            <p>Something went wrong.</p>
         {/if}
-        <p>💾 memory = {toad.games[0].results.length}</p>
-        <p>🕹 zzle = {toad.games[1].results.length}</p>
     </div>
     <div>
         {#if raidNotes}
