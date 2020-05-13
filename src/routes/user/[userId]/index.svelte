@@ -357,7 +357,7 @@
         </div>
         <div class="info">
             <p>{user.tel}</p>
-            <p>{xp} <strong>xp</strong></p>
+            <p>{xp || 0} <strong>xp</strong></p>
             <p>{audits} <strong>audits</strong></p>
             <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
         </div>
