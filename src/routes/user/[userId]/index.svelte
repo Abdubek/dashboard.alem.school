@@ -49,7 +49,7 @@
         }).then(resp => {
             user = resp.user.data.user[0];
             audits = resp.progress.data.user[0].audits.aggregate.count
-            xp = resp.progress.data.user[0].xp.aggregate.sum.amount;
+            xp = resp.progress.data.user[0].xp.aggregate.sum.amount || 0;
             projects = resp.progress.data.user[0].progresses;
             attendance = resp.attendance.data;
             image = resp.image.data[0].face;
@@ -357,7 +357,7 @@
         </div>
         <div class="info">
             <p>{user.tel}</p>
-            <p>{xp || 0} <strong>xp</strong></p>
+            <p>{xp} <strong>xp</strong></p>
             <p>{audits} <strong>audits</strong></p>
             <p><a href="{`${config.URL}/user/${userId}/piscine`}">piscine</a></p>
         </div>
